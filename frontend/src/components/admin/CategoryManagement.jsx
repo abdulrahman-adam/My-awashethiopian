@@ -14,6 +14,11 @@ export default function CategoryManagement() {
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
 
+  /* =========================
+     LOADING STATE (NEW)
+  ========================= */
+  const [loading, setLoading] = useState(false);
+
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -91,39 +96,37 @@ export default function CategoryManagement() {
       return;
     }
 
+    setLoading(true); // 🔥 START LOADING
 
+    try {
+      const isUpdate = !!editingCategory;
 
-try {
-  const isUpdate = !!editingCategory;
+      if (isUpdate) {
+        await updateCategory(editingCategory.id, form);
+        speak("Category updated successfully");
+      } else {
+        await createCategory(form);
+        speak("Category created successfully");
+      }
 
-  if (isUpdate) {
-    await updateCategory(editingCategory.id, form);
-    speak("Category updated successfully");
-  } else {
-    await createCategory(form);
-    speak("Category created successfully");
-  }
+      setShowModal(false);
 
-  setShowModal(false);
+    } catch (error) {
+      const isUpdate = !!editingCategory;
 
-} catch (error) {
-  const isUpdate = !!editingCategory;
+      const msg =
+        error?.response?.data?.message ||
+        (isUpdate
+          ? "Failed to update category"
+          : "Failed to create category");
 
-  const msg =
-    error?.response?.data?.message ||
-    (isUpdate
-      ? "Failed to update category"
-      : "Failed to create category");
+      toast.error(msg);
+      speak(msg);
 
-  toast.error(msg);
-  speak(msg);
-}
-
-
-
+    } finally {
+      setLoading(false); // 🔥 STOP LOADING
+    }
   };
-
-
 
   return (
     <div className="space-y-6">
@@ -146,30 +149,25 @@ try {
       {/* GRID */}
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-5">
         {categories?.map((cat) => (
-          <div
-            key={cat.id}
-            className="bg-white shadow-sm overflow-hidden"
-          >
+          <div key={cat.id} className="bg-white shadow-sm overflow-hidden">
 
-          {/* IMAGE */}
-<div className="h-40 bg-gray-100 flex overflow-x-auto">
-  {Array.isArray(cat.images) && cat.images.length > 0 ? (
-    cat.images.map((img, i) => (
-      <img
-        key={i}
-        src={img?.url || img}
-        className="h-40 w-full object-cover"
-        alt="category"
-      />
-    ))
-  ) : (
-    <div className="flex items-center justify-center w-full text-gray-400">
-      No Images
-    </div>
-  )}
-</div>
+            <div className="h-40 bg-gray-100 flex overflow-x-auto">
+              {Array.isArray(cat.images) && cat.images.length > 0 ? (
+                cat.images.map((img, i) => (
+                  <img
+                    key={i}
+                    src={img?.url || img}
+                    className="h-40 w-full object-cover"
+                    alt="category"
+                  />
+                ))
+              ) : (
+                <div className="flex items-center justify-center w-full text-gray-400">
+                  No Images
+                </div>
+              )}
+            </div>
 
-            {/* CONTENT */}
             <div className="p-4 space-y-2">
               <h3 className="font-bold text-lg">Name: {cat.name}</h3>
               <p className="text-sm text-gray-500">
@@ -190,7 +188,6 @@ try {
                   onClick={async () => {
                     try {
                       await deleteCategory(cat.id);
-                      // toast.success("Category deleted successfully");
                       speak("Category deleted successfully");
                     } catch (error) {
                       const msg =
@@ -212,18 +209,14 @@ try {
 
           </div>
         ))}
-
       </div>
 
-      {/* =========================
-          MODAL
-      ========================= */}
+      {/* MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 
           <div className="bg-white w-full max-w-md p-6 rounded-xl relative">
 
-            {/* CLOSE */}
             <button
               onClick={() => setShowModal(false)}
               className="absolute top-3 right-3 text-gray-500 hover:text-black"
@@ -237,7 +230,6 @@ try {
 
             <form onSubmit={handleSubmit} className="space-y-4">
 
-              {/* NAME */}
               <input
                 type="text"
                 name="name"
@@ -247,7 +239,6 @@ try {
                 className="w-full border p-2 rounded"
               />
 
-              {/* DESCRIPTION */}
               <textarea
                 name="description"
                 placeholder="Description"
@@ -256,7 +247,6 @@ try {
                 className="w-full border p-2 rounded"
               />
 
-              {/* IMAGES */}
               <input
                 type="file"
                 multiple
@@ -264,7 +254,6 @@ try {
                 onChange={handleImages}
               />
 
-              {/* PREVIEW */}
               <div className="flex gap-2 flex-wrap">
                 {form.images.map((img, i) => (
                   <img
@@ -275,12 +264,23 @@ try {
                 ))}
               </div>
 
-              {/* BUTTON */}
+              {/* BUTTON (CLEAN LOADING UI) */}
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                disabled={loading}
+                className={`w-full py-2 rounded text-white transition ${
+                  loading
+                    ? "bg-blue-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
               >
-                {editingCategory ? "Update" : "Create"}
+                {loading
+                  ? editingCategory
+                    ? "Updating..."
+                    : "Creating..."
+                  : editingCategory
+                    ? "Update"
+                    : "Create"}
               </button>
 
             </form>

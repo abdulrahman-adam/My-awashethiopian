@@ -54,6 +54,7 @@ export default function ProductManagement() {
   const [showScanner, setShowScanner] = useState(false);
 
   const [form, setForm] = useState(initialForm);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   /* =========================
      CALCULATOR
@@ -310,56 +311,53 @@ export default function ProductManagement() {
   /* =========================
      SUBMIT
   ========================= */
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!form.category_id || !form.name || !form.price) {
-      return toast.error("Category, Product Name and Price are required");
-    }
+  if (!form.category_id || !form.name || !form.price) {
+    return toast.error("Category, Product Name and Price are required");
+  }
 
-    if (!nameRegex.test(form.name)) {
-      return toast.error("Invalid product name");
-    }
+  if (!nameRegex.test(form.name)) {
+    return toast.error("Invalid product name");
+  }
 
-    const payload = {
-      ...form,
-      category_id: Number(form.category_id),
-      price: Number(form.price),
-      cost_price: Number(form.cost_price || 0),
-      stock: Number(form.stock || 0),
-      expiration_date: form.expiration_date || null,
-    };
-
-    try {
-      if (editingProduct) {
-        await updateProduct(editingProduct.id, payload);
-      } else {
-        await createProduct(payload);
-      }
-
-      // toast.success(
-      //   editingProduct
-      //     ? "Product updated successfully"
-      //     : "Product created successfully"
-      // );
-
-      speakMessage(
-        editingProduct
-          ? "Product updated successfully"
-          : "Product created successfully",
-      );
-
-      await closeModal();
-
-      loadData();
-    } catch (error) {
-      console.error(error);
-
-      toast.error("Something went wrong");
-
-      speakMessage("Something went wrong");
-    }
+  const payload = {
+    ...form,
+    category_id: Number(form.category_id),
+    price: Number(form.price),
+    cost_price: Number(form.cost_price || 0),
+    stock: Number(form.stock || 0),
+    expiration_date: form.expiration_date || null,
   };
+
+  try {
+    setIsSubmitting(true); // ✅ START LOADING
+
+    if (editingProduct) {
+      await updateProduct(editingProduct.id, payload);
+    } else {
+      await createProduct(payload);
+    }
+
+    speakMessage(
+      editingProduct
+        ? "Product updated successfully"
+        : "Product created successfully"
+    );
+
+    await closeModal();
+    loadData();
+
+  } catch (error) {
+    console.error(error);
+    toast.error("Something went wrong");
+    speakMessage("Something went wrong");
+
+  } finally {
+    setIsSubmitting(false); // ✅ STOP LOADING
+  }
+};
 
   /* =========================
      DELETE
@@ -800,9 +798,24 @@ export default function ProductManagement() {
 
               {/* SUBMIT */}
               <div className="lg:col-span-2">
-                <button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-2xl font-black text-lg shadow-2xl hover:opacity-90 transition">
-                  {editingProduct ? "Update Product" : "Create Product"}
-                </button>
+                <button
+  type="submit"
+  disabled={isSubmitting}
+  className={`w-full py-4 rounded-2xl font-black text-lg shadow-2xl transition
+    ${isSubmitting
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
+    }
+  `}
+>
+  {isSubmitting
+    ? editingProduct
+      ? "Updating..."
+      : "Creating..."
+    : editingProduct
+      ? "Update Product"
+      : "Create Product"}
+</button>
               </div>
             </form>
           </div>
