@@ -1,0 +1,112 @@
+services:
+  # ========================
+  # DATABASE (MySQL)
+  # ========================
+  db:
+    image: mysql:8.0
+    container_name: awashethiopian_db
+    restart: always
+
+    command: --default-authentication-plugin=mysql_native_password
+
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+
+    ports:
+      - "3307:3306"
+
+    volumes:
+      - awashethiopian_mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    networks:
+      - awashethiopian-network
+
+
+  # ========================
+  # BACKEND (Node.js)
+  # ========================
+  backend:
+    build: ./backend
+    container_name: awashethiopian_backend
+    restart: always
+
+    env_file:
+      - ./backend/.env
+
+    environment:
+      DB_HOST: db
+      PORT: 5000
+
+    ports:
+      - "5011:5000"
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    networks:
+      - awashethiopian-network
+
+
+  # ========================
+  # FRONTEND (React + Nginx)
+  # ========================
+  frontend:
+    build: ./frontend
+    container_name: awashethiopian_frontend
+    restart: always
+
+    ports:
+      - "8080:80"
+
+    networks:
+      - awashethiopian-network
+
+
+  # ========================
+  # PHPMYADMIN
+  # ========================
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: awashethiopian_phpmyadmin
+    restart: always
+
+    ports:
+      - "8089:80"
+
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    networks:
+      - awashethiopian-network
+
+
+# ========================
+# VOLUMES
+# ========================
+volumes:
+  awashethiopian_mysql_data:
+
+
+# ========================
+# NETWORK
+# ========================
+networks:
+  awashethiopian-network:
+    driver: bridge
