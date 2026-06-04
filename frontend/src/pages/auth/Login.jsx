@@ -41,7 +41,7 @@ export default function Login() {
           </h2>
 
           <p className="mt-2 inline-block px-4 py-1 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full animate-pulse shadow-lg">
-            Fancymarket
+            Awashethiopian
           </p>
         </div>
 
