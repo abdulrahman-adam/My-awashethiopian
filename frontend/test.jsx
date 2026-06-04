@@ -1,4 +1,4 @@
-import {
+ import {
   createContext,
   useContext,
   useEffect,
@@ -1450,27 +1450,28 @@ const downloadReport = async () => {
      AUTO DATA LOADING
   ========================================================= */
 useEffect(() => {
-  if (!token || !user) return;
-
-  if (didInitData.current) return;
-  didInitData.current = true;
+  if (!token || !user?.role) return;
 
   const loadInitialData = async () => {
-    const role = user.role?.toUpperCase();
+    const role = user.role.toUpperCase();
 
+    // Available for all authenticated users
     await getProducts();
 
+    // Admin / Manager only
     if (role === "ADMIN" || role === "MANAGER") {
-      await Promise.all([
-        getLowStockProducts(),
-        getUsers(),
-        getAllSales(),
-      ]);
+      const lowStockData = await getLowStockProducts();
+      const usersData = await getUsers();
+
+      console.log("FINAL LOW STOCK:", lowStockData);
+      console.log("FINAL USERS:", usersData);
+
+      await getAllSales();
     }
   };
 
   loadInitialData();
-}, [token]); // ✅ ONLY TOKEN
+}, [token, user?.role]);
 
   /* =========================================================
      CONTEXT VALUE

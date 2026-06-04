@@ -198,7 +198,7 @@ useEffect(() => {
   });
 }, [user, users, lowStock, products]);
 
-
+console.log("DASHBOARD MOUNT");
 
   return (
     <div className="space-y-8">
