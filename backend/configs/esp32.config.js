@@ -1,0 +1,1 @@
+export const ESP32_BASE_URL = "http://10.16.86.146";// change to your ESP32 IP

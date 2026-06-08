@@ -34,6 +34,7 @@ import saleRouter from "./routes/saleRoute.js";
 import inventoryRouter from "./routes/inventoryRoute.js";
 import reportRouter from "./routes/reportRoute.js";
 import analyticsRouter from "./routes/analyticsRoute.js";
+import esp32Router from "./routes/esp32.routes.js";
 
 /* =========================
    EXPRESS APP
@@ -164,6 +165,7 @@ app.use("/api/sales", saleRouter);
 app.use("/api/inventory", inventoryRouter);
 app.use("/api/reports", reportRouter);
 app.use("/api/analytics", analyticsRouter);
+app.use("/api/esp32", esp32Router);
 
 /* =========================
    HEALTH CHECK
