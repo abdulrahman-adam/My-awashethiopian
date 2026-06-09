@@ -67,7 +67,7 @@ services:
     restart: always
 
     ports:
-      - "8080:80"
+      - "3008:80"
 
     networks:
       - awashethiopian-network
