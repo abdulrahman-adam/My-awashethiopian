@@ -16,7 +16,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
 
     ports:
-      - "3307:3306"
+      - "3314:3306"
 
     volumes:
       - awashethiopian_mysql_data:/var/lib/mysql
