@@ -1245,71 +1245,6 @@ const createReturn = async (data) => {
 };
 
 
-
-
-
-  /* ========================================
-     ESP32 SUCCESS BEEP
-  ======================================== */
-  const beepSuccess = async () => {
-    try {
-      setLoading(true);
-
-      const { data } = await axios.get(
-        "/api/esp32/success"
-      );
-
-      return data;
-    } catch (error) {
-      console.error("SUCCESS_BEEP_ERROR:", error);
-
-      return {
-        success: false,
-        message:
-          error.response?.data?.message ||
-          error.message,
-      };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* ========================================
-     ESP32 ERROR BEEP
-  ======================================== */
-  const beepError = async () => {
-    try {
-      setLoading(true);
-
-      const { data } = await axios.get(
-        "/api/esp32/error"
-      );
-
-      return data;
-    } catch (error) {
-      console.error("ERROR_BEEP_ERROR:", error);
-
-      return {
-        success: false,
-        message:
-          error.response?.data?.message ||
-          error.message,
-      };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-
-
-
-
-
-
-
-
-
   /* =========================================================
      POS CART SYSTEM
   ========================================================= */
@@ -1515,27 +1450,28 @@ const downloadReport = async () => {
      AUTO DATA LOADING
   ========================================================= */
 useEffect(() => {
-  if (!token || !user) return;
-
-  if (didInitData.current) return;
-  didInitData.current = true;
+  if (!token || !user?.role) return;
 
   const loadInitialData = async () => {
-    const role = user.role?.toUpperCase();
+    const role = user.role.toUpperCase();
 
+    // Available for all authenticated users
     await getProducts();
 
+    // Admin / Manager only
     if (role === "ADMIN" || role === "MANAGER") {
-      await Promise.all([
-        getLowStockProducts(),
-        getUsers(),
-        getAllSales(),
-      ]);
+      const lowStockData = await getLowStockProducts();
+      const usersData = await getUsers();
+
+      console.log("FINAL LOW STOCK:", lowStockData);
+      console.log("FINAL USERS:", usersData);
+
+      await getAllSales();
     }
   };
 
   loadInitialData();
-}, [token]); // ✅ ONLY TOKEN
+}, [token, user?.role]);
 
   /* =========================================================
      CONTEXT VALUE
@@ -1614,10 +1550,6 @@ useEffect(() => {
         getSalesAnalytics,
         getReorderSuggestions,
         lowStock,
-
-        // Beep
-        beepSuccess,
-        beepError,
     // POS
     cart,
     setCart,
