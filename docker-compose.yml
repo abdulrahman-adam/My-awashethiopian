@@ -41,7 +41,8 @@ services:
     restart: always
 
     env_file:
-      - ./backend/.env
+      #- ./backend/.env
+      - .env
 
     environment:
       DB_HOST: db
