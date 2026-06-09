@@ -27,22 +27,23 @@ import html2canvas from "html2canvas";
 import SplitPaymentModal from "../../components/payment/SplitPaymentModal";
 
 export default function Cashier() {
-  const { getProductByBarcode, createSale } = useAppContext();
+  const { getProductByBarcode, createSale, beepSuccess, beepError} = useAppContext();
 
   const [cart, setCart] = useState([]);
   const [total, setTotal] = useState(0);
   const [scanning, setScanning] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [barcodeInput, setBarcodeInput] = useState("");
+  const [invoiceNumber, setInvoiceNumber] = useState("POS-0001");
+
 
   const [voiceActive, setVoiceActive] = useState(false);
-  const recognitionRef = useRef(null);
-
-  const [barcodeInput, setBarcodeInput] = useState("");
-
+  
+  
   const scanLock = useRef(false);
   const scannerRef = useRef(null);
+  const recognitionRef = useRef(null);
 
-  const [invoiceNumber, setInvoiceNumber] = useState("POS-0001");
 
   const [paymentDone, setPaymentDone] = useState(false);
 
@@ -372,7 +373,9 @@ const handlePayment = async ({ cash, card }) => {
       items,
     });
 
-    console.log("✅ SALE CREATED:", res);
+    // console.log("✅ SALE CREATED:", res);
+    // ✅ Professional Success Flow
+      await beepSuccess();
 
     toast.success("Payment successful");
     speak("Payment successful");
@@ -382,7 +385,7 @@ const handlePayment = async ({ cash, card }) => {
     // =========================
 
     try {
-      console.log("🧾 PDF START");
+      // console.log("🧾 PDF START");
 
       if (typeof downloadPDF === "function") {
         await downloadPDF(invoice);
@@ -396,7 +399,7 @@ const handlePayment = async ({ cash, card }) => {
     }
 
     try {
-      console.log("🖨️ PRINT START");
+      // console.log("🖨️ PRINT START");
 
       if (typeof printThermal === "function") {
         printThermal(invoice);
@@ -418,59 +421,22 @@ const handlePayment = async ({ cash, card }) => {
 
     scrollToReceipt();
 
-    console.log("🎉 PAYMENT FLOW COMPLETE");
+    // console.log("🎉 PAYMENT FLOW COMPLETE");
 
   } catch (err) {
+    await beepError(); // ❌ Professional Error Feedback
     console.error("🔥 PAYMENT ERROR (ONLY REAL FAIL):", err);
     toast.error(err?.message || "Payment failed");
   }
 };
 
-  // const payCash = async () => {
-  //   try {
-  //     const items = cart.map((p) => ({
-  //       product_id: p.id,
-  //       quantity: p.quantity,
-  //       price: p.price,
-  //     }));
-
-  //     const invoice = generateNextInvoice();
-
-  //     await createSale({
-  //       user_id: 1,
-  //       payment_method: "CASH",
-  //       invoice_number: invoice,
-  //       total,
-  //       items,
-  //     });
-
-  //     speak("payment successful");
-  //     toast.success("payment successful");
-
-  //     // ✅ RECEIPT FIRST
-  //     await downloadPDF(invoice);
-  //     printThermal(invoice);
-
-  //     setCart([]);
-  //     setShowPayment(false);
-  //     setPaymentDone(true);
-
-  //     scrollToReceipt();
-  //   } catch (err) {
-  //     toast.error("Payment failed");
-  //   }
-  // };
-
+ 
 
 
   const payCash = async () => {
-
-
   try {
    
     const items = cart.map((p, index) => {
-    
-
       return {
         product_id: p.id,
         quantity: p.quantity,
@@ -491,7 +457,7 @@ const handlePayment = async ({ cash, card }) => {
       items,
     });
 
-  
+    await beepSuccess();
     speak("payment successful");
     toast.success("payment successful");
 
@@ -540,7 +506,7 @@ const handlePayment = async ({ cash, card }) => {
 
 
   } catch (err) {
-   
+   await beepError();
 
     toast.error(err?.message || "Payment failed");
   }

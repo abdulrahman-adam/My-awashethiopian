@@ -1,5 +1,5 @@
 import express from "express";
-import { beepError, beepSuccess } from "../controllers/esp32.controller";
+import { beepError, beepSuccess } from "../controllers/esp32.controller.js";
 
 const esp32Router = express.Router();
 

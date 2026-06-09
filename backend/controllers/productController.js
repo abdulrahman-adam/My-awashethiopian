@@ -400,12 +400,13 @@ import { v2 as cloudinary } from "cloudinary";
 import Category from "../models/Category.js";
 import Product from "../models/Product.js";
 import { uploadFromBuffer } from "../configs/uploadFromBuffer .js";
+import { beepError, beepSuccess } from "./esp32.controller.js";
 
 /* 🔊 NEW IMPORT (ADDED) */
-import {
-  beepSuccess,
-  beepError
-} from "../controllers/esp32Controller.js";
+// import {
+//   beepSuccess,
+//   beepError
+// } from "../controllers/esp32Controller.js";
 
 /* =========================
    CREATE PRODUCT

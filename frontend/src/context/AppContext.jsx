@@ -1245,6 +1245,71 @@ const createReturn = async (data) => {
 };
 
 
+
+
+
+  /* ========================================
+     ESP32 SUCCESS BEEP
+  ======================================== */
+  const beepSuccess = async () => {
+    try {
+      setLoading(true);
+
+      const { data } = await axios.get(
+        "/api/esp32/success"
+      );
+
+      return data;
+    } catch (error) {
+      console.error("SUCCESS_BEEP_ERROR:", error);
+
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          error.message,
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ========================================
+     ESP32 ERROR BEEP
+  ======================================== */
+  const beepError = async () => {
+    try {
+      setLoading(true);
+
+      const { data } = await axios.get(
+        "/api/esp32/error"
+      );
+
+      return data;
+    } catch (error) {
+      console.error("ERROR_BEEP_ERROR:", error);
+
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          error.message,
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+
+
+
+
+
+
+
+
+
   /* =========================================================
      POS CART SYSTEM
   ========================================================= */
@@ -1549,6 +1614,10 @@ useEffect(() => {
         getSalesAnalytics,
         getReorderSuggestions,
         lowStock,
+
+        // Beep
+        beepSuccess,
+        beepError,
     // POS
     cart,
     setCart,

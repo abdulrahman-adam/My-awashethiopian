@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ESP32_BASE_URL } from "../configs/esp32.config";
+import { ESP32_BASE_URL } from "../configs/esp32.config.js";
 
 /* =========================
    SUCCESS BEEP
