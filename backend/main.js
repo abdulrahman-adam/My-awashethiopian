@@ -94,10 +94,10 @@ try {
 ========================= */
 
 const allowedOrigins = [
-  "https://munidm.fr",
-  "https://www.munidm.fr",
-  "https://api.munidm.fr",
-  "https://db.munidm.fr",
+  "https://zooolna.com",
+  "https://www.zooolna.com",
+  "https://api.zooolna.com",
+  "https://db.zooolna.com",
   "http://localhost:5173",
   "http://localhost:5174",
 ];
