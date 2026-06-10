@@ -27,7 +27,7 @@ import html2canvas from "html2canvas";
 import SplitPaymentModal from "../../components/payment/SplitPaymentModal";
 
 export default function Cashier() {
-  const { getProductByBarcode, createSale, beepSuccess, beepError} = useAppContext();
+  const { getProductByBarcode, createSale} = useAppContext();
 
   const [cart, setCart] = useState([]);
   const [total, setTotal] = useState(0);
@@ -375,7 +375,7 @@ const handlePayment = async ({ cash, card }) => {
 
     // console.log("✅ SALE CREATED:", res);
     // ✅ Professional Success Flow
-      await beepSuccess();
+      // await beepSuccess();
 
     toast.success("Payment successful");
     speak("Payment successful");
@@ -424,7 +424,7 @@ const handlePayment = async ({ cash, card }) => {
     // console.log("🎉 PAYMENT FLOW COMPLETE");
 
   } catch (err) {
-    await beepError(); // ❌ Professional Error Feedback
+    // await beepError(); // ❌ Professional Error Feedback
     console.error("🔥 PAYMENT ERROR (ONLY REAL FAIL):", err);
     toast.error(err?.message || "Payment failed");
   }
@@ -457,7 +457,7 @@ const handlePayment = async ({ cash, card }) => {
       items,
     });
 
-    await beepSuccess();
+    // await beepSuccess();
     speak("payment successful");
     toast.success("payment successful");
 
@@ -506,7 +506,7 @@ const handlePayment = async ({ cash, card }) => {
 
 
   } catch (err) {
-   await beepError();
+  //  await beepError();
 
     toast.error(err?.message || "Payment failed");
   }
