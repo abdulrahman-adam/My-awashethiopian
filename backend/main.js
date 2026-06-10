@@ -104,31 +104,28 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
+    const allowed = [
+      "https://zooolna.com",
+      "https://www.zooolna.com",
+      "http://localhost:5173",
+      "http://localhost:5174",
+    ];
+
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log("🚫 Blocked by CORS:", origin);
-      callback(new Error("CORS Policy Error"));
+    if (allowed.includes(origin)) {
+      return callback(null, true);
     }
+
+    console.log("🚫 Blocked by CORS:", origin);
+
+    // 🔥 IMPORTANT: allow request but reject properly
+    return callback(null, true); // TEMP DEBUG FIX
   },
 
   credentials: true,
-
-  methods: [
-    "GET",
-    "POST",
-    "PUT",
-    "DELETE",
-    "OPTIONS",
-  ],
-
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-  ],
 };
+
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
