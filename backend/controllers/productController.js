@@ -522,6 +522,41 @@ export const createProduct = async (req, res) => {
 /* =========================
   GET PRODUCT BY BARCODE
 ========================= */
+// export const getByBarcode = async (req, res) => {
+//   try {
+//     const { barcode } = req.params;
+
+//     const product = await Product.findOne({
+//       where: { barcode: barcode.trim() },
+//       include: [{ model: Category, as: "category" }],
+//     });
+
+//     if (!product) {
+//       await beepError(); // 🔊 ADDED
+//       return res.status(404).json({
+//         success: false,
+//         message: "Product not found",
+//       });
+//     }
+
+//     await beepSuccess(); // 🔊 ADDED
+
+//     return res.status(200).json({
+//       success: true,
+//       product,
+//     });
+
+//   } catch (error) {
+//     console.log(error);
+//     await beepError(); // 🔊 ADDED
+
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
 export const getByBarcode = async (req, res) => {
   try {
     const { barcode } = req.params;
@@ -532,23 +567,30 @@ export const getByBarcode = async (req, res) => {
     });
 
     if (!product) {
-      await beepError(); // 🔊 ADDED
+      await beepError();
       return res.status(404).json({
         success: false,
         message: "Product not found",
       });
     }
 
-    await beepSuccess(); // 🔊 ADDED
+    await beepSuccess();
+
+    // 🔥 FIX HERE
+    const data = product.toJSON();
+
+    data.images = data.images
+      ? JSON.parse(data.images)
+      : [];
 
     return res.status(200).json({
       success: true,
-      product,
+      product: data,
     });
 
   } catch (error) {
     console.log(error);
-    await beepError(); // 🔊 ADDED
+    await beepError();
 
     return res.status(500).json({
       success: false,

@@ -73,6 +73,8 @@ if (response) {
     }
   };
 
+  console.log(product);
+
   /* =========================
       CAMERA SCANNER
   ========================= */

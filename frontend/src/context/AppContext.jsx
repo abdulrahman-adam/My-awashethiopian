@@ -968,10 +968,10 @@ const deleteProduct = async (id) => {
   try {
     const res = await axios.delete(`/api/products/${id}`);
 
-    toast.success(res.data.message || "Product deleted");
+    // toast.success(res.data.message || "Product deleted");
 
     // ✅ NEW: optional debug log for admin tracking
-    console.log("PRODUCT_DELETED:", id);
+    // console.log("PRODUCT_DELETED:", id);
 
     return {
       success: true,
