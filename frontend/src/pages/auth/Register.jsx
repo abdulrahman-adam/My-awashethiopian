@@ -62,7 +62,7 @@ export default function Register() {
             {/* NAME */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Full Name
+                Nom et Prénom
               </label>
 
               <div className="mt-2 relative">
@@ -83,7 +83,7 @@ export default function Register() {
             {/* EMAIL */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Email address
+                Adresse email
               </label>
 
               <div className="mt-2 relative">
@@ -104,7 +104,7 @@ export default function Register() {
             {/* PHONE */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Phone Number
+                Numéro de téléphone
               </label>
 
               <div className="mt-2 relative">
@@ -146,7 +146,7 @@ export default function Register() {
             {/* PASSWORD */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Password
+                Mot de passe
               </label>
 
               <div className="mt-2 relative">
@@ -179,7 +179,7 @@ export default function Register() {
             {/* CONFIRM PASSWORD */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Confirm Password
+               Confirmez le mot de passe
               </label>
 
               <div className="mt-2 relative">
