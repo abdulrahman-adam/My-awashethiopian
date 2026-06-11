@@ -50,7 +50,7 @@ export default function Register() {
         {/* HEADER */}
         <div className="text-center">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
-            Create an account
+            Créer un compte
           </h2>
         </div>
 
