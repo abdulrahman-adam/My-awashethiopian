@@ -27,6 +27,42 @@ const SearchProduct = () => {
 
   const scannerRef = useRef(null);
 
+   /* =========================
+     ⚡ LASER SCANNER WEDGE LOGIC
+     ========================= */
+const barcodeBuffer = useRef("");
+
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      const barcode = barcodeBuffer.current;
+
+      console.log("SCANNED:", barcode);
+
+      barcodeBuffer.current = "";
+
+      handleSearch(barcode);
+      return;
+    }
+
+    if (e.code.startsWith("Digit")) {
+      barcodeBuffer.current += e.code.replace("Digit", "");
+    }
+
+    if (e.code.startsWith("Numpad")) {
+      barcodeBuffer.current += e.code.replace("Numpad", "");
+    }
+  };
+
+  window.addEventListener("keydown", handleKeyDown);
+
+  return () =>
+    window.removeEventListener("keydown", handleKeyDown);
+}, []);
+
+
+
+
   /* =========================
       VOICE
   ========================= */
@@ -37,9 +73,26 @@ const SearchProduct = () => {
     window.speechSynthesis.speak(speech);
   };
 
+  
+  const normalizeBarcode = (text) => {
+    if (!text) return "";
+  
+    const cleaned = String(text)
+      .trim()
+      .replace(/\s+/g, "")
+      .replace(/\D/g, ""); // ONLY numbers
+  
+    // EAN-13 / UPC validation
+    if (cleaned.length < 8 || cleaned.length > 14) return "";
+  
+    return cleaned;
+  };
+
   /* =========================
       SEARCH PRODUCT
   ========================= */
+
+
   const handleSearch = async (customBarcode) => {
     try {
       setLoading(true);
@@ -73,42 +126,115 @@ if (response) {
     }
   };
 
-  console.log(product);
+  
+
 
   /* =========================
       CAMERA SCANNER
   ========================= */
+  // const startScanner = async () => {
+  //   setScannerOpen(true);
+
+  //   setTimeout(async () => {
+  //     try {
+  //       scannerRef.current = new Html5Qrcode("reader");
+
+  //       await scannerRef.current.start(
+  //         { facingMode: "environment" },
+  //         {
+  //           fps: 10,
+  //           qrbox: {
+  //             width: 260,
+  //             height: 120,
+  //           },
+  //         },
+  //         async (decodedText) => {
+  //           setBarcode(decodedText);
+
+  //           await stopScanner();
+
+  //           handleSearch(decodedText);
+  //         },
+  //         () => {},
+  //       );
+  //     } catch (error) {
+  //       console.log(error);
+  //       setError("Camera failed");
+  //     }
+  //   }, 300);
+  // };
+
   const startScanner = async () => {
-    setScannerOpen(true);
+  setScannerOpen(true);
 
-    setTimeout(async () => {
-      try {
-        scannerRef.current = new Html5Qrcode("reader");
+  setTimeout(async () => {
+    try {
+      scannerRef.current = new Html5Qrcode("reader");
 
-        await scannerRef.current.start(
-          { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: {
-              width: 260,
-              height: 120,
-            },
+      await scannerRef.current.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: {
+            width: 260,
+            height: 120,
           },
+        },
+
+
           async (decodedText) => {
-            setBarcode(decodedText);
+ 
 
-            await stopScanner();
+  if (decodedText) {
+    console.log(
+      "📦 CHAR CODES:",
+      [...decodedText].map(c => c.charCodeAt(0))
+    );
+  }
 
-            handleSearch(decodedText);
-          },
-          () => {},
-        );
-      } catch (error) {
-        console.log(error);
-        setError("Camera failed");
-      }
-    }, 300);
-  };
+  const code = normalizeBarcode(decodedText);
+
+
+
+  if (!code) {
+    console.warn("❌ REJECTED BY NORMALIZER");
+    return;
+  }
+
+  if (scanLock.current) return;
+  scanLock.current = true;
+
+  try {
+    const product = await getProductByBarcode(code);
+
+    console.log("🧾 API RESULT:", product);
+
+    if (!product || product?.success === false) {
+      speak("Product not found");
+      toast.error(`Not found: ${code}`);
+      return;
+    }
+
+    addToCart(product);
+  } catch (err) {
+    console.error("🔥 SCANNER ERROR:", err);
+  } finally {
+    setTimeout(() => {
+      scanLock.current = false;
+    }, 1200);
+  }
+},
+
+
+        
+        () => {}
+      );
+    } catch (error) {
+      console.log(error);
+      setError("Camera failed");
+    }
+  }, 300);
+};
 
   const stopScanner = async () => {
     try {
@@ -126,11 +252,20 @@ if (response) {
   /* =========================
       ENTER SEARCH
   ========================= */
+  // const handleKeyDown = (e) => {
+  //   if (e.key === "Enter") {
+  //     handleSearch();
+  //   }
+  // };
+
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
+  console.log({
+    key: e.key,
+    code: e.code,
+    keyCode: e.keyCode,
+    which: e.which,
+  });
+};
 
   /* =========================
       CLEANUP
@@ -252,8 +387,11 @@ if (response) {
                     </div>
 
                     <div>
+                       <h2 className="text-3xl font-black text-white">
+                        ID: {product.id}
+                      </h2>
                       <h2 className="text-3xl font-black text-white">
-                        {product.name}
+                        Name: {product.name}
                       </h2>
 
                       <p className="text-slate-300 mt-1">
@@ -285,10 +423,7 @@ if (response) {
                   <div>
                     <div className="relative overflow-hidden rounded-3xl border border-slate-700 bg-slate-900/70 h-[320px] md:h-[420px]">
                       <img
-                        src={
-                          product.images?.[0]?.url ||
-                          "https://placehold.co/600x600/png"
-                        }
+                        src={product?.images?.[0]?.url || "https://placehold.co/600x600/png"}
                         alt={product.name}
                         className="w-full h-full object-cover hover:scale-110 transition-all duration-700"
                       />

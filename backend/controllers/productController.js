@@ -153,7 +153,6 @@ export const getByBarcode = async (req, res) => {
 
     const product = await Product.findOne({
       where: { barcode: barcode.trim() },
-
       include: [
         {
           model: Category,
@@ -169,9 +168,16 @@ export const getByBarcode = async (req, res) => {
       });
     }
 
+    // 🔥 FIX HERE
+    const plainProduct = product.toJSON();
+
+    plainProduct.images = plainProduct.images
+      ? JSON.parse(plainProduct.images)
+      : [];
+
     return res.status(200).json({
       success: true,
-      product,
+      product: plainProduct,
     });
   } catch (error) {
     console.log(error);
