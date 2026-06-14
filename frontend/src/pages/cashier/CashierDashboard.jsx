@@ -683,28 +683,7 @@ export default function Cashier() {
   const lastKeyTime = useRef(Date.now());
 
   useEffect(() => {
-    // const handleKeyDown = (e) => {
-    //   // Ignore if user is typing in the search input
-    //   if (e.target.tagName === "INPUT") return;
-
-    //   const now = Date.now();
-    //   // Reset buffer if delay between characters is too long (> 50ms)
-    //   if (now - lastKeyTime.current > 50) {
-    //     barcodeBuffer.current = "";
-    //   }
-
-    //   if (e.key === "Enter") {
-    //     if (barcodeBuffer.current) {
-    //       handleManualAdd(barcodeBuffer.current);
-    //       barcodeBuffer.current = "";
-    //     }
-    //   } else if (e.key.length === 1) {
-    //     barcodeBuffer.current += e.key;
-    //   }
-    //   lastKeyTime.current = now;
-    // };
-
-
+ 
 const handleKeyDown = (e) => {
   const now = Date.now();
 

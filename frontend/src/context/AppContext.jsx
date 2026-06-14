@@ -1045,18 +1045,29 @@ const deleteProduct = async (id) => {
   /* =========================================================
    GET INVENTORY LOGS
 ========================================================= */
-  const getInventoryLogs = async () => {
-    try {
-      const res = await axios.get("/api/inventory/logs");
+ const getInventoryLogs = async () => {
+  try {
+    const res = await axios.get("/api/inventory/logs");
 
-      setInventoryLogs(res.data.logs);
+    console.log("LOGS RESPONSE:", res.data);
 
-      return res.data.logs;
-    } catch (error) {
-      console.log(error);
-      toast.error("Failed to load inventory logs");
-    }
-  };
+    const logs = res.data.logs || res.data.inventoryLogs || [];
+
+    setInventoryLogs(logs);
+
+    return logs;
+  } catch (error) {
+    console.log("INVENTORY LOGS ERROR:", error);
+    console.log("STATUS:", error.response?.status);
+    console.log("DATA:", error.response?.data);
+
+    toast.error(
+      error.response?.data?.message || "Failed to load inventory logs"
+    );
+
+    return []; // 🔥 IMPORTANT FIX
+  }
+};
 
   /* =========================================================
    GET PRODUCT HISTORY
@@ -1088,21 +1099,6 @@ const getLowStockProducts = async () => {
   }
 };
 
-
-// const getLowStockProducts = async () => {
-//   try {
-//     const res = await axios.get("/api/inventory/low-stock");
-
-//     const data = res.data?.products || [];
-
-//     setLowStock(data);
-
-//     return data; // ✅ IMPORTANT
-//   } catch (error) {
-//     setLowStock([]); // ✅ force consistency
-//     return [];
-//   }
-// };
 
 
 /* =========================
