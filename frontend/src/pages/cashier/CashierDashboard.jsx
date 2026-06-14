@@ -683,26 +683,68 @@ export default function Cashier() {
   const lastKeyTime = useRef(Date.now());
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Ignore if user is typing in the search input
-      if (e.target.tagName === "INPUT") return;
+    // const handleKeyDown = (e) => {
+    //   // Ignore if user is typing in the search input
+    //   if (e.target.tagName === "INPUT") return;
 
-      const now = Date.now();
-      // Reset buffer if delay between characters is too long (> 50ms)
-      if (now - lastKeyTime.current > 50) {
-        barcodeBuffer.current = "";
-      }
+    //   const now = Date.now();
+    //   // Reset buffer if delay between characters is too long (> 50ms)
+    //   if (now - lastKeyTime.current > 50) {
+    //     barcodeBuffer.current = "";
+    //   }
 
-      if (e.key === "Enter") {
-        if (barcodeBuffer.current) {
-          handleManualAdd(barcodeBuffer.current);
-          barcodeBuffer.current = "";
-        }
-      } else if (e.key.length === 1) {
-        barcodeBuffer.current += e.key;
-      }
-      lastKeyTime.current = now;
-    };
+    //   if (e.key === "Enter") {
+    //     if (barcodeBuffer.current) {
+    //       handleManualAdd(barcodeBuffer.current);
+    //       barcodeBuffer.current = "";
+    //     }
+    //   } else if (e.key.length === 1) {
+    //     barcodeBuffer.current += e.key;
+    //   }
+    //   lastKeyTime.current = now;
+    // };
+
+
+const handleKeyDown = (e) => {
+  const now = Date.now();
+
+  if (now - lastKeyTime.current > 100) {
+    barcodeBuffer.current = "";
+  }
+
+  lastKeyTime.current = now;
+
+ if (e.key === "Enter") {
+  const code = barcodeBuffer.current;
+  barcodeBuffer.current = "";
+
+  const cleaned = code;
+
+  console.log("FINAL RAW:", cleaned);
+
+  if (/^\d{8,14}$/.test(cleaned)) {
+    handleManualAdd(cleaned);
+  } else {
+    console.warn("INVALID BARCODE:", cleaned);
+  }
+
+  return;
+}
+
+  // ONLY physical number row + numpad
+ if (e.code.startsWith("Digit")) {
+  const num = e.code.replace("Digit", "");
+  barcodeBuffer.current += num;
+  return;
+}
+
+if (e.code.startsWith("Numpad")) {
+  const num = e.code.replace("Numpad", "");
+  barcodeBuffer.current += num;
+  return;
+}
+};
+
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -814,6 +856,23 @@ export default function Cashier() {
     setBarcodeInput("");
   };
 
+
+  // Normalize function
+const normalizeBarcode = (text) => {
+  if (!text) return "";
+
+  const cleaned = String(text)
+    .trim()
+    .replace(/\s+/g, "")
+    .replace(/\D/g, ""); // ONLY numbers
+
+  // EAN-13 / UPC validation
+  if (cleaned.length < 8 || cleaned.length > 14) return "";
+
+  return cleaned;
+};
+
+
   /* =========================
      📷 FIXED CAMERA (NO ERROR)
      ========================= */
@@ -840,21 +899,68 @@ export default function Cashier() {
         await html5QrCode.start(
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 280, height: 180 } },
-          async (decodedText) => {
-            const code = decodedText.trim();
-            if (scanLock.current) return;
-            scanLock.current = true;
-            try {
-              const product = await getProductByBarcode(code);
-              if (!product || product?.success === false) {
-                speak("Product not found");
-                return;
-              }
-              addToCart(product);
-            } finally {
-              setTimeout(() => { scanLock.current = false; }, 1200);
-            }
-          }
+
+          // async (decodedText) => {
+          //   const code = decodedText.trim();
+          //   if (scanLock.current) return;
+          //   scanLock.current = true;
+          //   try {
+          //     const product = await getProductByBarcode(code);
+          //     if (!product || product?.success === false) {
+          //       speak("Product not found");
+          //       return;
+          //     }
+          //     addToCart(product);
+          //   } finally {
+          //     setTimeout(() => { scanLock.current = false; }, 1200);
+          //   }
+          // }
+
+  async (decodedText) => {
+  console.log("====================================");
+  console.log("📦 RAW decodedText:", decodedText);
+  console.log("📦 TYPE:", typeof decodedText);
+  console.log("📦 LENGTH:", decodedText?.length);
+
+  if (decodedText) {
+    console.log(
+      "📦 CHAR CODES:",
+      [...decodedText].map(c => c.charCodeAt(0))
+    );
+  }
+
+  const code = normalizeBarcode(decodedText);
+
+  console.log("✅ NORMALIZED:", code);
+
+  if (!code) {
+    console.warn("❌ REJECTED BY NORMALIZER");
+    return;
+  }
+
+  if (scanLock.current) return;
+  scanLock.current = true;
+
+  try {
+    const product = await getProductByBarcode(code);
+
+    console.log("🧾 API RESULT:", product);
+
+    if (!product || product?.success === false) {
+      speak("Product not found");
+      toast.error(`Not found: ${code}`);
+      return;
+    }
+
+    addToCart(product);
+  } catch (err) {
+    console.error("🔥 SCANNER ERROR:", err);
+  } finally {
+    setTimeout(() => {
+      scanLock.current = false;
+    }, 1200);
+  }
+}
         );
       }, 400);
     } catch (err) {
