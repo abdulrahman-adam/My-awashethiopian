@@ -1,3 +1,5 @@
+
+
 import { useEffect, useRef, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import {
@@ -64,6 +66,19 @@ export default function ProductManagement() {
   const [unitCostPrice, setUnitCostPrice] = useState("");
   const [recentTransactions, setRecentTransactions] = useState([]);
 
+
+  // Add this inside ProductManagement component
+  const barcodeInputRef = useRef(null);
+  const isStartingRef = useRef(false);
+
+  useEffect(() => {
+  if (showModal) {
+    // Small timeout ensures the modal animation finishes before focusing
+    setTimeout(() => barcodeInputRef.current?.focus(), 300);
+  }
+}, [showModal]);
+
+
   /* =========================
      LOAD DATA
   ========================= */
@@ -106,69 +121,196 @@ export default function ProductManagement() {
   };
 
   /* =========================
-     START SCANNER
-  ========================= */
-  const startScanner = async () => {
+   START SCANNER (Updated)
+========================= */
+// const startScanner = async () => {
+//   try {
+//     if (scannerRef.current || isStartingRef.current) return;
+
+//     isStartingRef.current = true;
+
+//     // show UI first (this mounts #reader)
+//     setShowScanner(true);
+
+//     // wait for React to render DOM
+//     setTimeout(async () => {
+//       try {
+//         const readerElement = document.getElementById("reader");
+
+//         if (!readerElement) {
+//           throw new Error("Scanner DOM element not found (#reader)");
+//         }
+
+//         const html5QrCode = new Html5Qrcode("reader");
+//         scannerRef.current = html5QrCode;
+
+//         await html5QrCode.start(
+//           { facingMode: "environment" },
+//           {
+//             fps: 10,
+//             qrbox: { width: 280, height: 140 },
+//           },
+//           async (decodedText) => {
+//             const cleanBarcode = decodedText.replace(/\D/g, "");
+
+//             setForm((prev) => ({
+//               ...prev,
+//               barcode: cleanBarcode,
+//             }));
+
+//             toast.success("Barcode scanned successfully");
+//             speakMessage(
+//               `Barcode detected ${cleanBarcode.split("").join(" ")}`
+//             );
+
+//             await stopScanner();
+
+//             document.querySelector('input[name="name"]')?.focus();
+//           },
+//           () => {}
+//         );
+//       } catch (error) {
+//         console.error("Scanner start error:", error);
+//         handleCameraError(error);
+//       } finally {
+//         isStartingRef.current = false;
+//       }
+//     }, 300);
+//   } catch (error) {
+//     console.error("Scanner error:", error);
+//     handleCameraError(error);
+//     isStartingRef.current = false;
+//   }
+// };
+
+// const handleCameraError = async (error) => {
+//   console.error("❌ Camera Error:", error);
+
+//   const errorMessage =
+//     typeof error === "string"
+//       ? error
+//       : error?.message || String(error);
+
+//   let userFriendlyMessage = "An unknown camera error occurred.";
+
+//   if (
+//     errorMessage.includes("NotAllowedError") ||
+//     errorMessage.includes("Permission denied")
+//   ) {
+//     userFriendlyMessage =
+//       "Camera access is blocked. Please allow camera permission and refresh the page.";
+//   } else if (
+//     errorMessage.includes("NotFoundError") ||
+//     errorMessage.includes("Scanner DOM element not found")
+//   ) {
+//     userFriendlyMessage =
+//       "Camera or scanner element not found.";
+//   } else if (errorMessage.includes("NotReadableError")) {
+//     userFriendlyMessage =
+//       "The camera is already being used by another application.";
+//   } else if (errorMessage.includes("OverconstrainedError")) {
+//     userFriendlyMessage =
+//       "The selected camera is not available on this device.";
+//   }
+
+//   toast.error(userFriendlyMessage, { duration: 8000 });
+//   speakMessage(userFriendlyMessage);
+
+//   try {
+//     if (scannerRef.current) {
+//       await scannerRef.current.stop();
+//       await scannerRef.current.clear();
+//       scannerRef.current = null;
+//     }
+//   } catch (err) {
+//     console.error("Cleanup error:", err);
+//   }
+
+//   setShowScanner(false);
+// };
+
+
+
+const startScanner = () => {
+  if (scannerRef.current || isStartingRef.current) return;
+
+  isStartingRef.current = true;
+  setShowScanner(true);
+};
+
+
+useEffect(() => {
+  if (!showScanner) return;
+
+  let html5QrCode;
+
+  const initScanner = async () => {
     try {
-      setShowScanner(true);
+      const reader = document.getElementById("reader");
 
-      setTimeout(async () => {
-        const html5QrCode = new Html5Qrcode("reader");
+      if (!reader) return;
 
-        scannerRef.current = html5QrCode;
+      html5QrCode = new Html5Qrcode("reader");
+      scannerRef.current = html5QrCode;
 
-        await html5QrCode.start(
-          {
-            facingMode: "environment",
-          },
-          {
-            fps: 10,
-            qrbox: {
-              width: 280,
-              height: 140,
-            },
-          },
-          async (decodedText) => {
-            setForm((prev) => ({
-              ...prev,
-              barcode: decodedText,
-            }));
+      await html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 280, height: 140 },
+        },
+        async (decodedText) => {
+          const cleanBarcode = decodedText.replace(/\D/g, "");
 
-            toast.success("Barcode scanned successfully");
+          setForm((prev) => ({
+            ...prev,
+            barcode: cleanBarcode,
+          }));
 
-            speakMessage("Barcode scanned successfully");
+          toast.success("Barcode scanned successfully");
+          speakMessage(`Barcode detected ${cleanBarcode.split("").join(" ")}`);
 
-            await stopScanner();
-          },
-          () => {},
-        );
-      }, 300);
-    } catch (error) {
-      console.error(error);
-
-      toast.error("Unable to access camera");
-
-      speakMessage("Unable to access camera");
-
-      setShowScanner(false);
+          setTimeout(() => {
+  stopScanner();
+}, 300);
+        }
+      );
+    } catch (err) {
+      console.error("Scanner init error:", err);
+      handleCameraError(err);
+    } finally {
+      isStartingRef.current = false;
     }
   };
+
+  const timer = setTimeout(initScanner, 0); // 🔥 IMPORTANT (next tick)
+
+  return () => {
+    clearTimeout(timer);
+  };
+}, [showScanner]);
+
+
+
+
 
   /* =========================
      STOP SCANNER
   ========================= */
-  const stopScanner = async () => {
-    try {
-      if (scannerRef.current) {
-        await scannerRef.current.stop();
-        await scannerRef.current.clear();
-      }
-    } catch (error) {
-      console.log(error);
-    }
+const stopScanner = async () => {
+  try {
+    if (!scannerRef.current) return;
 
+    await scannerRef.current.stop();
+    await scannerRef.current.clear();
+
+    scannerRef.current = null;
+  } catch (err) {
+    console.error("Stop scanner error:", err);
+  } finally {
     setShowScanner(false);
-  };
+  }
+};
 
   /* =========================
      AUTO CALCULATE
@@ -191,42 +333,55 @@ export default function ProductManagement() {
   }, [quantity, unitPrice, unitCostPrice]);
 
   /* =========================
-     HANDLE CHANGE
-  ========================= */
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+   HANDLE CHANGE (Updated)
+========================= */
+const handleChange = (e) => {
+  const { name, value } = e.target;
 
-    const numericFields = ["barcode", "stock"];
-    const decimalFields = ["price", "cost_price"];
-
-    if (numericFields.includes(name)) {
-      if (value === "" || onlyNumbers.test(value)) {
-        setForm((prev) => ({
-          ...prev,
-          [name]: value,
-        }));
-      }
-
-      return;
-    }
-
-    if (decimalFields.includes(name)) {
-      if (value === "" || decimalRegex.test(value)) {
-        setForm((prev) => ({
-          ...prev,
-          [name]: value,
-        }));
-      }
-
-      return;
-    }
-
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  // 1. Translation Map for AZERTY Scanner Input
+  // This handles the shift/non-shift keys common on French keyboards
+  const azertyMap = {
+    'à': '0', '&': '1', 'é': '2', '"': '3', "'": '4',
+    '(': '5', '-': '6', 'è': '7', '_': '8', 'ç': '9',
+    ')': '0', // Sometimes Shift+0
+    // Add other character mappings if your scanner outputs special symbols
   };
 
+  // 2. Convert raw input using the map
+  let processedValue = value.split('').map(char => azertyMap[char] || char).join('');
+
+  // 3. Logic based on field type
+  const numericFields = ["stock"]; // Only 'stock' should remain strictly numeric
+  const alphanumericFields = ["barcode"]; // 'barcode' can now have letters
+
+  // Handle strictly numeric fields (e.g., Stock)
+  if (numericFields.includes(name)) {
+    const numericOnly = processedValue.replace(/\D/g, "");
+    if (numericOnly === "" || onlyNumbers.test(numericOnly)) {
+      setForm((prev) => ({ ...prev, [name]: numericOnly }));
+    }
+    return;
+  }
+
+  // Handle barcode (allowing letters and numbers)
+  if (name === "barcode") {
+    // We allow letters, numbers, and common barcode symbols
+    // The regex /^[a-zA-Z0-9\s\-_.]{0,}$/ allows alphanumeric and basic characters
+    setForm((prev) => ({ ...prev, [name]: processedValue }));
+    return;
+  }
+
+  // Handle other fields (Prices, etc.)
+  if (["price", "cost_price"].includes(name)) {
+    if (value === "" || decimalRegex.test(value)) {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
+    return;
+  }
+
+  // Default update
+  setForm((prev) => ({ ...prev, [name]: value }));
+};
   /* =========================
      HANDLE IMAGES
   ========================= */
@@ -611,11 +766,19 @@ const handleSubmit = async (e) => {
 
                 <div className="flex gap-2">
                   <input
+                    ref={barcodeInputRef} // Add this
                     name="barcode"
                     value={form.barcode}
                     onChange={handleChange}
                     placeholder="Scan barcode"
                     className="w-full border-2 border-gray-200 rounded-2xl p-3 outline-none focus:border-indigo-500"
+
+                                      // ADD THIS ONKEYDOWN HANDLER
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault(); // This stops the form from submitting
+                      }
+                    }}
                   />
 
                   <button
@@ -853,3 +1016,9 @@ const handleSubmit = async (e) => {
     </div>
   );
 }
+
+
+
+
+
+
